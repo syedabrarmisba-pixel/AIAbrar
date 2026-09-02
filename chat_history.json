@@ -1,0 +1,58 @@
+[
+    {
+        "sender": "You",
+        "message": "open google"
+    },
+    {
+        "sender": "AbrarAI",
+        "message": "Opening Google, sir. \ud83c\udf10"
+    },
+    {
+        "sender": "You",
+        "message": "search python tutorials"
+    },
+    {
+        "sender": "AbrarAI",
+        "message": "Searching Google for: python tutorials \ud83d\udd0e"
+    },
+    {
+        "sender": "You",
+        "message": "search python tutorials"
+    },
+    {
+        "sender": "AbrarAI",
+        "message": "Searching Google for: python tutorials \ud83d\udd0e"
+    },
+    {
+        "sender": "You",
+        "message": "search python tutorials"
+    },
+    {
+        "sender": "AbrarAI",
+        "message": "Searching Google for: python tutorials \ud83d\udd0e"
+    },
+    {
+        "sender": "You",
+        "message": "hello"
+    },
+    {
+        "sender": "AbrarAI",
+        "message": "Hello sir! \ud83d\udc4b How can I help you?"
+    },
+    {
+        "sender": "You",
+        "message": "google kholo"
+    },
+    {
+        "sender": "AbrarAI",
+        "message": "Opening Google in Chrome, sir. \ud83c\udf10"
+    },
+    {
+        "sender": "You",
+        "message": "youtube kholo"
+    },
+    {
+        "sender": "AbrarAI",
+        "message": "Opening YouTube in Chrome, sir. \u25b6\ufe0f"
+    }
+]
