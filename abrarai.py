@@ -1,341 +1,66 @@
+
 import tkinter as tk
 from tkinter import scrolledtext
-import datetime
-import json
-import os
-import subprocess
-import shutil
-import urllib.parse
+import webbrowser
+from datetime import datetime
 
-HISTORY_FILE = "chat_history.json"
+from ai_brain import ask_ai
 
 
 # =========================
-# CHROME
-# =========================
-
-def open_chrome(url):
-    chrome_paths = [
-        os.path.expandvars(
-            r"%ProgramFiles%\Google\Chrome\Application\chrome.exe"
-        ),
-        os.path.expandvars(
-            r"%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"
-        ),
-        os.path.expandvars(
-            r"%LocalAppData%\Google\Chrome\Application\chrome.exe"
-        )
-    ]
-
-    chrome = shutil.which("chrome")
-
-    if chrome:
-        subprocess.Popen([chrome, url])
-        return True
-
-    for path in chrome_paths:
-        if os.path.exists(path):
-            subprocess.Popen([path, url])
-            return True
-
-    return False
-
-
-# =========================
-# ABRARAI BRAIN
+# ABRARAI RESPONSE
 # =========================
 
 def get_response(message):
+    message = message.strip()
 
-    message = message.lower().strip()
+    if not message:
+        return "Sir, kuch type karo."
 
-    # -------------------------
-    # BASIC CHAT
-    # -------------------------
+    # Open websites
+    if message.lower() in ["open google", "google kholo", "google open karo"]:
+        webbrowser.open("https://www.google.com")
+        return "Opening Google, sir. 🌐"
 
-    if message in ["hello", "hi", "hey", "hii", "helo"]:
-        return "Hello sir! 👋 How can I help you?"
+    if message.lower() in ["open youtube", "youtube kholo", "youtube open karo"]:
+        webbrowser.open("https://www.youtube.com")
+        return "Opening YouTube, sir. ▶️"
 
-    if "your name" in message or "who are you" in message:
-        return "I am AbrarAI, your personal assistant. 🤖"
+    if message.lower() in ["open whatsapp", "whatsapp kholo"]:
+        webbrowser.open("https://web.whatsapp.com")
+        return "Opening WhatsApp, sir. 💬"
 
-    if "my name" in message:
-        return "Your name is Abrar, sir."
+    if message.lower() in ["open instagram", "instagram kholo"]:
+        webbrowser.open("https://www.instagram.com")
+        return "Opening Instagram, sir. 📸"
 
-    if "how are you" in message:
-        return "I'm doing great, sir! 🤖"
+    if message.lower() in ["open gmail", "gmail kholo"]:
+        webbrowser.open("https://mail.google.com")
+        return "Opening Gmail, sir. 📧"
 
-    if "thank you" in message or "thanks" in message:
-        return "You're welcome, sir! 😊"
-
-    # -------------------------
-    # TIME
-    # -------------------------
-
-    if "time" in message:
-        current_time = datetime.datetime.now().strftime("%I:%M %p")
-        return f"Sir, the current time is {current_time} ⏰"
-
-    # -------------------------
-    # DATE
-    # -------------------------
-
-    if "date" in message or "today" in message:
-        current_date = datetime.datetime.now().strftime("%d %B %Y")
-        return f"Today is {current_date} 📅"
-
-    # -------------------------
-    # GOOGLE
-    # -------------------------
-
-    if (
-        "open google" in message
-        or "google kholo" in message
-        or "google open karo" in message
-        or "google chalao" in message
-    ):
-        if open_chrome("https://www.google.com"):
-            return "Opening Google in Chrome, sir. 🌐"
-        return "Google Chrome was not found, sir."
-
-    # -------------------------
-    # YOUTUBE
-    # -------------------------
-
-    if (
-        "open youtube" in message
-        or "youtube kholo" in message
-        or "youtube open karo" in message
-        or "youtube chalao" in message
-    ):
-        if open_chrome("https://www.youtube.com"):
-            return "Opening YouTube in Chrome, sir. ▶️"
-        return "Google Chrome was not found, sir."
-
-    # -------------------------
-    # WHATSAPP
-    # -------------------------
-
-    if (
-        "open whatsapp" in message
-        or "whatsapp kholo" in message
-        or "whatsapp open karo" in message
-    ):
-        if open_chrome("https://web.whatsapp.com"):
-            return "Opening WhatsApp in Chrome, sir. 💬"
-        return "Google Chrome was not found, sir."
-
-    # -------------------------
-    # GMAIL
-    # -------------------------
-
-    if (
-        "open gmail" in message
-        or "gmail kholo" in message
-        or "gmail open karo" in message
-    ):
-        if open_chrome("https://mail.google.com"):
-            return "Opening Gmail in Chrome, sir. 📧"
-        return "Google Chrome was not found, sir."
-
-    # -------------------------
-    # INSTAGRAM
-    # -------------------------
-
-    if (
-        "open instagram" in message
-        or "instagram kholo" in message
-        or "instagram open karo" in message
-    ):
-        if open_chrome("https://www.instagram.com"):
-            return "Opening Instagram in Chrome, sir. 📸"
-        return "Google Chrome was not found, sir."
-
-    # -------------------------
-    # GOOGLE SEARCH
-    # -------------------------
-
-    if message.startswith("search "):
-
+    # Search Google
+    if message.lower().startswith("search "):
         query = message[7:].strip()
 
         if query:
-            search_url = (
+            webbrowser.open(
                 "https://www.google.com/search?q="
-                + urllib.parse.quote_plus(query)
+                + query.replace(" ", "+")
             )
+            return f"Searching Google for {query}, sir. 🔎"
 
-            if open_chrome(search_url):
-                return f"Searching Google for: {query} 🔎"
+    # Time
+    if message.lower() in ["time", "what is the time", "time kya hai"]:
+        return datetime.now().strftime("Sir, the time is %I:%M %p. ⏰")
 
-            return "Google Chrome was not found, sir."
-
-    # -------------------------
-    # CALCULATOR
-    # -------------------------
-
-    if (
-        "calculator" in message
-        or "calc" in message
-    ):
-        try:
-            subprocess.Popen("calc.exe")
-            return "Opening Calculator, sir. 🧮"
-        except:
-            return "I couldn't open Calculator, sir."
-
-    # -------------------------
-    # NOTEPAD
-    # -------------------------
-
-    if "notepad" in message:
-
-        try:
-            subprocess.Popen("notepad.exe")
-            return "Opening Notepad, sir. 📝"
-        except:
-            return "I couldn't open Notepad, sir."
-
-    # -------------------------
-    # PAINT
-    # -------------------------
-
-    if "paint" in message:
-
-        try:
-            subprocess.Popen("mspaint.exe")
-            return "Opening Paint, sir. 🎨"
-        except:
-            return "I couldn't open Paint, sir."
-
-    # -------------------------
-    # FILE EXPLORER
-    # -------------------------
-
-    if (
-        "file explorer" in message
-        or "explorer kholo" in message
-        or "open explorer" in message
-    ):
-
-        try:
-            subprocess.Popen("explorer.exe")
-            return "Opening File Explorer, sir. 📁"
-        except:
-            return "I couldn't open File Explorer, sir."
-
-    # -------------------------
-    # CMD
-    # -------------------------
-
-    if (
-        "open cmd" in message
-        or "cmd kholo" in message
-        or "command prompt" in message
-    ):
-
-        try:
-            subprocess.Popen("cmd.exe")
-            return "Opening Command Prompt, sir. 💻"
-        except:
-            return "I couldn't open Command Prompt, sir."
-
-    # -------------------------
-    # VS CODE
-    # -------------------------
-
-    if (
-        "open vs code" in message
-        or "vs code kholo" in message
-        or "vscode kholo" in message
-    ):
-
-        try:
-            subprocess.Popen("code")
-            return "Opening VS Code, sir. 💻"
-        except:
-            return "I couldn't open VS Code, sir."
-
-    # -------------------------
-    # SETTINGS
-    # -------------------------
-
-    if (
-        "open settings" in message
-        or "settings kholo" in message
-        or "settings open karo" in message
-    ):
-
-        try:
-            os.system("start ms-settings:")
-            return "Opening Windows Settings, sir. ⚙️"
-        except:
-            return "I couldn't open Windows Settings, sir."
-
-    # -------------------------
-    # UNKNOWN COMMAND
-    # -------------------------
-
-    return "I don't understand that command yet, sir. 😅"
-
-
-# =========================
-# SAVE CHAT
-# =========================
-
-def save_message(sender, message):
-
-    try:
-        with open(HISTORY_FILE, "r", encoding="utf-8") as file:
-            history = json.load(file)
-    except:
-        history = []
-
-    history.append({
-        "sender": sender,
-        "message": message
-    })
-
-    with open(HISTORY_FILE, "w", encoding="utf-8") as file:
-        json.dump(history, file, indent=4)
-
-
-# =========================
-# LOAD CHAT
-# =========================
-
-def load_history():
-
-    try:
-
-        with open(HISTORY_FILE, "r", encoding="utf-8") as file:
-            history = json.load(file)
-
-        for item in history:
-
-            if item["sender"] == "You":
-                chat.insert(
-                    tk.END,
-                    "You\n" + item["message"] + "\n\n",
-                    "user"
-                )
-
-            else:
-                chat.insert(
-                    tk.END,
-                    "AbrarAI\n" + item["message"] + "\n\n",
-                    "ai"
-                )
-
-    except:
-        pass
-
-    if chat.get("1.0", tk.END).strip() == "":
-        chat.insert(
-            tk.END,
-            "AbrarAI\nHello sir! 👋 How can I help you today?\n\n",
-            "ai"
+    # Date
+    if message.lower() in ["date", "today date", "aaj ki date kya hai"]:
+        return datetime.now().strftime(
+            "Sir, today's date is %d %B %Y. 📅"
         )
+
+    # Everything else → AI Brain
+    return ask_ai(message)
 
 
 # =========================
@@ -343,33 +68,30 @@ def load_history():
 # =========================
 
 def send_message(event=None):
-
-    message = entry.get().strip()
+    message = user_input.get().strip()
 
     if not message:
         return
 
-    chat.insert(
-        tk.END,
-        "You\n" + message + "\n\n",
-        "user"
-    )
+    # Show user message
+    chat_box.config(state=tk.NORMAL)
+    chat_box.insert(tk.END, f"You: {message}\n", "user")
+    chat_box.config(state=tk.DISABLED)
 
-    save_message("You", message)
+    user_input.delete(0, tk.END)
 
-    entry.delete(0, tk.END)
+    # Get AI response
+    try:
+        response = get_response(message)
+    except Exception as e:
+        response = f"Sorry sir, error aa gaya:\n{e}"
 
-    response = get_response(message)
+    # Show AI response
+    chat_box.config(state=tk.NORMAL)
+    chat_box.insert(tk.END, f"AbrarAI: {response}\n\n", "ai")
+    chat_box.config(state=tk.DISABLED)
 
-    chat.insert(
-        tk.END,
-        "AbrarAI\n" + response + "\n\n",
-        "ai"
-    )
-
-    save_message("AbrarAI", response)
-
-    chat.see(tk.END)
+    chat_box.see(tk.END)
 
 
 # =========================
@@ -377,17 +99,9 @@ def send_message(event=None):
 # =========================
 
 def clear_chat():
-
-    chat.delete("1.0", tk.END)
-
-    with open(HISTORY_FILE, "w", encoding="utf-8") as file:
-        json.dump([], file)
-
-    chat.insert(
-        tk.END,
-        "AbrarAI\nChat cleared. 👋\n\n",
-        "ai"
-    )
+    chat_box.config(state=tk.NORMAL)
+    chat_box.delete("1.0", tk.END)
+    chat_box.config(state=tk.DISABLED)
 
 
 # =========================
@@ -395,341 +109,325 @@ def clear_chat():
 # =========================
 
 def new_chat():
-
     clear_chat()
 
-    chat.insert(
+    chat_box.config(state=tk.NORMAL)
+    chat_box.insert(
         tk.END,
-        "AbrarAI\nNew chat started. How can I help you, sir?\n\n",
+        "AbrarAI: New chat started, sir. 🤖\n\n",
         "ai"
     )
-
-
-# =========================
-# VOICE BUTTON
-# =========================
-
-def microphone_message():
-
-    chat.insert(
-        tk.END,
-        "AbrarAI\n🎤 Voice feature will be added soon, sir.\n\n",
-        "ai"
-    )
-
-    chat.see(tk.END)
+    chat_box.config(state=tk.DISABLED)
 
 
 # =========================
 # DARK MODE
 # =========================
 
-def toggle_dark_mode():
+dark_mode = True
 
+
+def toggle_theme():
     global dark_mode
 
-    dark_mode = not dark_mode
-
     if dark_mode:
-
-        window.configure(bg="#202123")
-        sidebar.configure(bg="#171717")
-        main.configure(bg="#202123")
-        bottom.configure(bg="#202123")
-
-        logo.configure(
-            bg="#171717",
-            fg="white"
-        )
-
-        title.configure(
-            bg="#202123",
-            fg="white"
-        )
-
-        chat.configure(
-            bg="#343541",
-            fg="white",
-            insertbackground="white"
-        )
-
-        entry.configure(
-            bg="#40414F",
-            fg="white",
-            insertbackground="white"
-        )
-
-        new_chat_button.configure(
-            bg="#343541",
-            fg="white"
-        )
-
-        clear_button.configure(
-            bg="#343541",
-            fg="white"
-        )
-
-        dark_button.configure(
-            bg="#343541",
-            fg="white",
-            text="☀ Light Mode"
-        )
-
-    else:
-
-        window.configure(bg="white")
-        sidebar.configure(bg="#F5F5F5")
-        main.configure(bg="white")
-        bottom.configure(bg="white")
-
-        logo.configure(
-            bg="#F5F5F5",
-            fg="black"
-        )
-
-        title.configure(
-            bg="white",
-            fg="black"
-        )
-
-        chat.configure(
+        root.configure(bg="#f2f2f2")
+        title_label.configure(bg="#f2f2f2", fg="#111111")
+        chat_box.configure(
             bg="white",
             fg="black",
             insertbackground="black"
         )
-
-        entry.configure(
+        user_input.configure(
             bg="white",
             fg="black",
             insertbackground="black"
         )
-
-        new_chat_button.configure(
-            bg="white",
+        send_button.configure(
+            bg="#dddddd",
             fg="black"
         )
-
-        clear_button.configure(
-            bg="white",
-            fg="black"
-        )
-
-        dark_button.configure(
-            bg="white",
+        theme_button.configure(
+            bg="#dddddd",
             fg="black",
             text="🌙 Dark Mode"
         )
+
+        dark_mode = False
+
+    else:
+        root.configure(bg="#111111")
+        title_label.configure(bg="#111111", fg="white")
+        chat_box.configure(
+            bg="#181818",
+            fg="white",
+            insertbackground="white"
+        )
+        user_input.configure(
+            bg="#222222",
+            fg="white",
+            insertbackground="white"
+        )
+        send_button.configure(
+            bg="#333333",
+            fg="white"
+        )
+        theme_button.configure(
+            bg="#333333",
+            fg="white",
+            text="☀️ Light Mode"
+        )
+
+        dark_mode = True
 
 
 # =========================
 # MAIN WINDOW
 # =========================
 
-window = tk.Tk()
+root = tk.Tk()
 
-window.title("AbrarAI")
+root.title("AbrarAI")
+root.geometry("850x650")
+root.minsize(650, 500)
 
-window.geometry("950x650")
-
-window.minsize(700, 500)
+root.configure(bg="#111111")
 
 
 # =========================
-# SIDEBAR
+# TITLE
 # =========================
 
-sidebar = tk.Frame(
-    window,
-    width=220,
-    bg="#F5F5F5"
-)
-
-sidebar.pack(
-    side=tk.LEFT,
-    fill=tk.Y
-)
-
-sidebar.pack_propagate(False)
-
-
-logo = tk.Label(
-    sidebar,
+title_label = tk.Label(
+    root,
     text="🤖 AbrarAI",
-    font=("Arial", 22, "bold"),
-    bg="#F5F5F5"
+    font=("Arial", 24, "bold"),
+    bg="#111111",
+    fg="white"
 )
 
-logo.pack(pady=25)
+title_label.pack(pady=(20, 5))
 
 
-new_chat_button = tk.Button(
-    sidebar,
-    text="＋ New Chat",
+subtitle_label = tk.Label(
+    root,
+    text="Your Personal AI Assistant",
     font=("Arial", 11),
-    command=new_chat
+    bg="#111111",
+    fg="#aaaaaa"
 )
 
-new_chat_button.pack(
-    padx=20,
-    pady=10,
-    fill=tk.X
-)
-
-
-clear_button = tk.Button(
-    sidebar,
-    text="🗑 Clear Chat",
-    font=("Arial", 11),
-    command=clear_chat
-)
-
-clear_button.pack(
-    padx=20,
-    pady=10,
-    fill=tk.X
-)
-
-
-dark_button = tk.Button(
-    sidebar,
-    text="🌙 Dark Mode",
-    font=("Arial", 11),
-    command=toggle_dark_mode
-)
-
-dark_button.pack(
-    padx=20,
-    pady=10,
-    fill=tk.X
-)
-
-
-# =========================
-# MAIN
-# =========================
-
-main = tk.Frame(
-    window,
-    bg="white"
-)
-
-main.pack(
-    side=tk.LEFT,
-    fill=tk.BOTH,
-    expand=True
-)
-
-
-title = tk.Label(
-    main,
-    text="AbrarAI Assistant",
-    font=("Arial", 20, "bold"),
-    bg="white"
-)
-
-title.pack(pady=15)
+subtitle_label.pack(pady=(0, 15))
 
 
 # =========================
 # CHAT BOX
 # =========================
 
-chat = scrolledtext.ScrolledText(
-    main,
-    font=("Arial", 12),
+chat_box = scrolledtext.ScrolledText(
+    root,
     wrap=tk.WORD,
-    padx=20,
-    pady=20
+    font=("Arial", 12),
+    bg="#181818",
+    fg="white",
+    insertbackground="white",
+    relief=tk.FLAT,
+    padx=15,
+    pady=15
 )
 
-chat.pack(
-    padx=20,
-    pady=5,
+chat_box.pack(
     fill=tk.BOTH,
-    expand=True
-)
-
-chat.tag_config(
-    "user",
-    justify="right"
-)
-
-chat.tag_config(
-    "ai",
-    justify="left"
-)
-
-
-# =========================
-# INPUT
-# =========================
-
-bottom = tk.Frame(
-    main,
-    bg="white"
-)
-
-bottom.pack(
+    expand=True,
     padx=20,
-    pady=20,
-    fill=tk.X
+    pady=10
+)
+
+chat_box.tag_config(
+    "user",
+    foreground="#4da6ff",
+    font=("Arial", 12, "bold")
+)
+
+chat_box.tag_config(
+    "ai",
+    foreground="#00e676",
+    font=("Arial", 12)
+)
+
+chat_box.config(state=tk.DISABLED)
+
+
+# =========================
+# WELCOME MESSAGE
+# =========================
+
+chat_box.config(state=tk.NORMAL)
+
+chat_box.insert(
+    tk.END,
+    "AbrarAI: Hello sir! 👋\n"
+    "AbrarAI is ready. Ask me anything.\n\n",
+    "ai"
+)
+
+chat_box.config(state=tk.DISABLED)
+
+
+# =========================
+# INPUT FRAME
+# =========================
+
+input_frame = tk.Frame(
+    root,
+    bg="#111111"
+)
+
+input_frame.pack(
+    fill=tk.X,
+    padx=20,
+    pady=(5, 10)
 )
 
 
-entry = tk.Entry(
-    bottom,
-    font=("Arial", 13)
+# =========================
+# INPUT BOX
+# =========================
+
+user_input = tk.Entry(
+    input_frame,
+    font=("Arial", 13),
+    bg="#222222",
+    fg="white",
+    insertbackground="white",
+    relief=tk.FLAT
 )
 
-entry.pack(
+user_input.pack(
     side=tk.LEFT,
     fill=tk.X,
     expand=True,
-    ipady=12
+    ipady=10,
+    padx=(0, 10)
 )
 
 
-send_button = tk.Button(
-    bottom,
-    text="Send",
-    font=("Arial", 11, "bold"),
-    command=send_message
-)
-
-send_button.pack(
-    side=tk.RIGHT,
-    ipadx=18,
-    ipady=6
-)
-
-
-mic_button = tk.Button(
-    bottom,
-    text="🎤",
-    font=("Arial", 14),
-    command=microphone_message
-)
-
-mic_button.pack(
-    side=tk.RIGHT,
-    padx=8,
-    ipadx=8,
-    ipady=4
-)
-
-
-entry.bind(
+# Enter key
+user_input.bind(
     "<Return>",
     send_message
 )
 
 
 # =========================
-# START
+# SEND BUTTON
 # =========================
 
-load_history()
+send_button = tk.Button(
+    input_frame,
+    text="Send ➤",
+    font=("Arial", 11, "bold"),
+    bg="#333333",
+    fg="white",
+    relief=tk.FLAT,
+    padx=18,
+    pady=8,
+    command=send_message
+)
 
-entry.focus()
+send_button.pack(side=tk.RIGHT)
 
-window.mainloop()
+
+# =========================
+# BUTTON FRAME
+# =========================
+
+button_frame = tk.Frame(
+    root,
+    bg="#111111"
+)
+
+button_frame.pack(
+    fill=tk.X,
+    padx=20,
+    pady=(0, 15)
+)
+
+
+# =========================
+# NEW CHAT BUTTON
+# =========================
+
+new_chat_button = tk.Button(
+    button_frame,
+    text="➕ New Chat",
+    font=("Arial", 10),
+    bg="#333333",
+    fg="white",
+    relief=tk.FLAT,
+    padx=12,
+    pady=6,
+    command=new_chat
+)
+
+new_chat_button.pack(
+    side=tk.LEFT,
+    padx=(0, 8)
+)
+
+
+# =========================
+# CLEAR BUTTON
+# =========================
+
+clear_button = tk.Button(
+    button_frame,
+    text="🗑 Clear",
+    font=("Arial", 10),
+    bg="#333333",
+    fg="white",
+    relief=tk.FLAT,
+    padx=12,
+    pady=6,
+    command=clear_chat
+)
+
+clear_button.pack(
+    side=tk.LEFT,
+    padx=8
+)
+
+
+# =========================
+# THEME BUTTON
+# =========================
+
+theme_button = tk.Button(
+    button_frame,
+    text="☀️ Light Mode",
+    font=("Arial", 10),
+    bg="#333333",
+    fg="white",
+    relief=tk.FLAT,
+    padx=12,
+    pady=6,
+    command=toggle_theme
+)
+
+theme_button.pack(
+    side=tk.RIGHT
+)
+
+
+# =========================
+# FOCUS INPUT
+# =========================
+
+user_input.focus_set()
+
+
+# =========================
+# START ABRARAI
+# =========================
+
+root.mainloop()

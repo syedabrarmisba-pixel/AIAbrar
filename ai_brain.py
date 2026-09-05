@@ -1,394 +1,413 @@
 
 import json
 import os
-import datetime
+import requests
 
-MEMORY_FILE = "memory.json"
+MODEL = "tinyllama:latest"
+OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
+
+USERS_FILE = "users.json"
+HISTORY_FILE = "chat_history.json"
+
+MAX_HISTORY = 6
+DEFAULT_USER = "abrar"
 
 
-# ==========================================
-# LOAD MEMORY
-# ==========================================
+# =========================
+# USER FUNCTIONS
+# =========================
 
-def load_memory():
+def load_users():
+    default_users = {
+        "abrar": {
+            "name": "Abrar"
+        },
+        "abbu": {
+            "name": "Abbu"
+        }
+    }
 
-    if not os.path.exists(MEMORY_FILE):
+    if not os.path.exists(USERS_FILE):
+        save_users(default_users)
+        return default_users
+
+    try:
+        with open(USERS_FILE, "r", encoding="utf-8") as f:
+            users = json.load(f)
+
+        if not isinstance(users, dict):
+            users = {}
+
+    except Exception:
+        users = {}
+
+    # Make sure default profiles exist
+    changed = False
+
+    for user_id, data in default_users.items():
+        if user_id not in users:
+            users[user_id] = data
+            changed = True
+
+    if changed:
+        save_users(users)
+
+    return users
+
+
+def save_users(users):
+    with open(USERS_FILE, "w", encoding="utf-8") as f:
+        json.dump(users, f, indent=4, ensure_ascii=False)
+
+
+def normalize_user_id(user_id):
+    if not user_id:
+        return DEFAULT_USER
+
+    user_id = str(user_id).strip().lower()
+
+    allowed = ""
+    for char in user_id:
+        if char.isalnum() or char in "_-":
+            allowed += char
+
+    return allowed or DEFAULT_USER
+
+
+def get_display_name(user_id):
+    user_id = normalize_user_id(user_id)
+
+    users = load_users()
+
+    if user_id not in users:
+        return user_id.capitalize()
+
+    return users[user_id].get("name", user_id.capitalize())
+
+
+# =========================
+# HISTORY FUNCTIONS
+# =========================
+
+def load_history():
+    if not os.path.exists(HISTORY_FILE):
         return {}
 
     try:
+        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
 
-        with open(MEMORY_FILE, "r", encoding="utf-8") as file:
-            return json.load(file)
+        # Old version was a list.
+        # We reset it so users don't share old memory.
+        if isinstance(data, list):
+            return {}
 
-    except:
+        if not isinstance(data, dict):
+            return {}
 
+        return data
+
+    except Exception:
         return {}
 
 
-# ==========================================
-# SAVE MEMORY
-# ==========================================
-
-def save_memory(memory):
-
-    with open(MEMORY_FILE, "w", encoding="utf-8") as file:
-        json.dump(memory, file, indent=4)
+def save_history(all_history):
+    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(all_history, f, indent=4, ensure_ascii=False)
 
 
-# ==========================================
-# AI BRAIN
-# ==========================================
+def get_user_history(user_id):
+    user_id = normalize_user_id(user_id)
 
-def ask_ai(question):
+    all_history = load_history()
 
-    question = question.strip()
-    lower = question.lower()
+    if user_id not in all_history:
+        all_history[user_id] = []
 
-    memory = load_memory()
+    if not isinstance(all_history[user_id], list):
+        all_history[user_id] = []
 
-
-    # ======================================
-    # HELLO
-    # ======================================
-
-    if lower in ["hello", "hi", "hey", "hii", "hello abrarai"]:
-
-        return "Hello sir! 👋 How can I help you?"
+    return all_history[user_id]
 
 
-    # ======================================
-    # WHO ARE YOU
-    # ======================================
+def save_user_history(user_id, history):
+    user_id = normalize_user_id(user_id)
 
-    if "who are you" in lower or "your name" in lower:
+    all_history = load_history()
 
-        return "I am AbrarAI, your personal local AI assistant. 🤖"
+    all_history[user_id] = history[-MAX_HISTORY:]
 
-
-    # ======================================
-    # HOW ARE YOU
-    # ======================================
-
-    if "how are you" in lower:
-
-        return "I'm doing great, sir! 🤖"
+    save_history(all_history)
 
 
-    # ======================================
-    # THANK YOU
-    # ======================================
+# =========================
+# NAME DETECTION
+# =========================
 
-    if "thank" in lower:
+def detect_name(message):
+    text = message.strip()
 
-        return "You're welcome, sir! 😊"
+    lower = text.lower()
+
+    patterns = [
+        "my name is ",
+        "mera naam ",
+        "my name's ",
+        "call me "
+    ]
+
+    name = None
+
+    for pattern in patterns:
+        if pattern in lower:
+            start = lower.find(pattern) + len(pattern)
+            name = text[start:].strip()
+
+            # Remove common ending words
+            for ending in [" hai", " he", " h", "."]:
+                if name.lower().endswith(ending):
+                    name = name[:-len(ending)].strip()
+
+            break
+
+    if not name:
+        return None
+
+    # Keep only first part for simple names
+    name = name.split(",")[0].strip()
+
+    if not name:
+        return None
+
+    # Avoid extremely long values
+    if len(name) > 40:
+        return None
+
+    return name
 
 
-    # ======================================
+def update_user_name(user_id, name):
+    user_id = normalize_user_id(user_id)
+
+    users = load_users()
+
+    if user_id not in users:
+        users[user_id] = {
+            "name": name
+        }
+    else:
+        users[user_id]["name"] = name
+
+    save_users(users)
+
+
+# =========================
+# IDENTITY QUESTIONS
+# =========================
+
+def is_name_question(message):
+    text = message.lower().strip()
+
+    questions = [
+        "what is my name",
+        "whats my name",
+        "what's my name",
+        "mera naam kya hai",
+        "mera name kya hai",
+        "my name",
+        "who am i",
+        "main kaun hoon",
+        "mein kaun hoon"
+    ]
+
+    return any(q in text for q in questions)
+
+
+# =========================
+# AI
+# =========================
+
+def ask_ai(user_message, username=DEFAULT_USER):
+
+    user_id = normalize_user_id(username)
+
+    users = load_users()
+
+    # Make sure selected profile exists
+    if user_id not in users:
+        users[user_id] = {
+            "name": user_id.capitalize()
+        }
+        save_users(users)
+
+    display_name = get_display_name(user_id)
+
+    # =========================
     # NAME MEMORY
-    # ======================================
+    # =========================
 
-    if lower.startswith("my name is "):
+    detected_name = detect_name(user_message)
 
-        name = question[11:].strip()
+    if detected_name:
+        update_user_name(user_id, detected_name)
+        display_name = detected_name
 
-        if name:
+        return f"Okay! Main aapko {display_name} bulaunga."
 
-            memory["name"] = name
+    # =========================
+    # DIRECT NAME ANSWER
+    # =========================
 
-            save_memory(memory)
+    if is_name_question(user_message):
+        return f"Aapka naam {display_name} hai."
 
-            return f"Okay sir! I'll remember your name is {name}. 🧠"
+    # =========================
+    # USER HISTORY
+    # =========================
 
+    history = get_user_history(user_id)
 
-    if "what is my name" in lower:
+    history_text = ""
 
-        name = memory.get("name")
+    for item in history[-MAX_HISTORY:]:
+        role = item.get("role", "")
+        content = item.get("content", "")
 
-        if name:
+        if role == "user":
+            history_text += f"User: {content}\n"
 
-            return f"Your name is {name}, sir. 😊"
+        elif role == "assistant":
+            history_text += f"AbrarAI: {content}\n"
 
-        return "You haven't told me your name yet, sir."
+    # =========================
+    # PROMPT
+    # =========================
 
+    prompt = f"""
+You are AbrarAI, a personal AI assistant.
 
-    # ======================================
-    # FAVORITE COLOR
-    # ======================================
+The current selected profile is:
+Name: {display_name}
+User ID: {user_id}
 
-    if lower.startswith("my favorite color is "):
+IMPORTANT RULES:
 
-        color = question[21:].strip()
+1. The current user's name is exactly "{display_name}".
+2. Never change the user's identity based on another person's conversation.
+3. Never use another profile's memory.
+4. Only use the conversation history shown below.
+5. If asked "What is my name?", the answer is "{display_name}".
+6. Do not invent names such as Suresh, Abrar Patil, or any other person.
+7. Be friendly and helpful.
+8. Keep answers reasonably short.
+9. You can reply in simple English or Roman Hindi/Hinglish depending on the user's message.
 
-        if color:
+Conversation history for THIS USER ONLY:
+{history_text}
 
-            memory["favorite_color"] = color
+Current user message:
+{user_message}
 
-            save_memory(memory)
+AbrarAI:
+"""
 
-            return f"Got it sir! I'll remember your favorite color is {color}. 🎨"
-
-
-    if "what is my favorite color" in lower:
-
-        color = memory.get("favorite_color")
-
-        if color:
-
-            return f"Your favorite color is {color}. 🎨"
-
-        return "You haven't told me your favorite color yet."
-
-
-    # ======================================
-    # FAVORITE FOOD
-    # ======================================
-
-    if lower.startswith("my favorite food is "):
-
-        food = question[20:].strip()
-
-        if food:
-
-            memory["favorite_food"] = food
-
-            save_memory(memory)
-
-            return f"Got it sir! I'll remember your favorite food is {food}. 🍽️"
-
-
-    if "what is my favorite food" in lower:
-
-        food = memory.get("favorite_food")
-
-        if food:
-
-            return f"Your favorite food is {food}. 🍽️"
-
-        return "You haven't told me your favorite food yet."
-
-
-    # ======================================
-    # FAVORITE GAME
-    # ======================================
-
-    if lower.startswith("my favorite game is "):
-
-        game = question[20:].strip()
-
-        if game:
-
-            memory["favorite_game"] = game
-
-            save_memory(memory)
-
-            return f"Got it sir! I'll remember your favorite game is {game}. 🎮"
-
-
-    if "what is my favorite game" in lower:
-
-        game = memory.get("favorite_game")
-
-        if game:
-
-            return f"Your favorite game is {game}. 🎮"
-
-        return "You haven't told me your favorite game yet."
-
-
-    # ======================================
-    # STUDY
-    # ======================================
-
-    if lower.startswith("i study "):
-
-        study = question[8:].strip()
-
-        if study:
-
-            memory["study"] = study
-
-            save_memory(memory)
-
-            return f"Okay sir! I'll remember that you study {study}. 📚"
-
-
-    if "what do i study" in lower:
-
-        study = memory.get("study")
-
-        if study:
-
-            return f"You study {study}, sir. 📚"
-
-        return "You haven't told me what you study yet."
-
-
-    # ======================================
-    # LIKE / INTEREST
-    # ======================================
-
-    if lower.startswith("i like "):
-
-        interest = question[7:].strip()
-
-        if interest:
-
-            interests = memory.get("likes", [])
-
-            if interest not in interests:
-
-                interests.append(interest)
-
-            memory["likes"] = interests
-
-            save_memory(memory)
-
-            return f"Got it sir! I'll remember that you like {interest}. ❤️"
-
-
-    # ======================================
-    # SHOW MEMORY
-    # ======================================
-
-    if lower in [
-        "show my memory",
-        "show memory",
-        "what do you remember",
-        "what do you know about me"
-    ]:
-
-        if not memory:
-
-            return "My memory is empty, sir. 🧠"
-
-        result = "Here's what I remember about you, sir: 🧠\n\n"
-
-        if "name" in memory:
-            result += f"👤 Name: {memory['name']}\n"
-
-        if "favorite_color" in memory:
-            result += f"🎨 Favorite color: {memory['favorite_color']}\n"
-
-        if "favorite_food" in memory:
-            result += f"🍽️ Favorite food: {memory['favorite_food']}\n"
-
-        if "favorite_game" in memory:
-            result += f"🎮 Favorite game: {memory['favorite_game']}\n"
-
-        if "study" in memory:
-            result += f"📚 Study: {memory['study']}\n"
-
-        if "likes" in memory:
-
-            for item in memory["likes"]:
-                result += f"❤️ Likes: {item}\n"
-
-        return result
-
-
-    # ======================================
-    # CLEAR MEMORY
-    # ======================================
-
-    if lower in [
-        "clear memory",
-        "delete memory",
-        "forget everything"
-    ]:
-
-        save_memory({})
-
-        return "Okay sir! 🧠 I've cleared my local memory."
-
-
-    # ======================================
-    # TIME
-    # ======================================
-
-    if lower == "time" or "current time" in lower:
-
-        current_time = datetime.datetime.now().strftime("%I:%M %p")
-
-        return f"Sir, the current time is {current_time}. ⏰"
-
-
-    # ======================================
-    # DATE
-    # ======================================
-
-    if lower == "date" or "today" in lower:
-
-        current_date = datetime.datetime.now().strftime("%d %B %Y")
-
-        return f"Today is {current_date}. 📅"
-
-
-    # ======================================
-    # PYTHON
-    # ======================================
-
-    if "python" in lower:
-
-        return (
-            "Python is a programming language. 🐍\n\n"
-            "It is used for AI, websites, automation, "
-            "software and data science."
+    try:
+        response = requests.post(
+            OLLAMA_URL,
+            json={
+                "model": MODEL,
+                "prompt": prompt,
+                "stream": False
+            },
+            timeout=120
         )
 
+        response.raise_for_status()
 
-    # ======================================
-    # HTML
-    # ======================================
+        data = response.json()
 
-    if "html" in lower:
+        answer = data.get("response", "").strip()
 
-        return (
-            "HTML creates the structure of a website. 🌐\n\n"
-            "It is used for headings, paragraphs, "
-            "buttons, images and other web elements."
-        )
+        if not answer:
+            answer = "Sorry, mujhe abhi response nahi mila."
 
+    except requests.exceptions.ConnectionError:
+        return "Ollama start nahi hai. Pehle Ollama run karo."
 
-    # ======================================
-    # CSS
-    # ======================================
+    except requests.exceptions.Timeout:
+        return "AI response lene mein zyada time lag raha hai. Dobara try karo."
 
-    if "css" in lower:
+    except Exception as e:
+        return f"AI ERROR: {type(e).__name__}: {e}"
 
-        return (
-            "CSS is used to style websites. 🎨\n\n"
-            "It controls colors, fonts, spacing, "
-            "layouts and animations."
-        )
+    # =========================
+    # SAVE ONLY THIS USER'S HISTORY
+    # =========================
 
+    history.append({
+        "role": "user",
+        "content": user_message
+    })
 
-    # ======================================
-    # JAVASCRIPT
-    # ======================================
+    history.append({
+        "role": "assistant",
+        "content": answer
+    })
 
-    if "javascript" in lower:
+    save_user_history(user_id, history)
 
-        return (
-            "JavaScript makes websites interactive. ⚡\n\n"
-            "It can handle buttons, forms, animations "
-            "and dynamic content."
-        )
+    return answer
 
 
-    # ======================================
-    # FALLBACK
-    # ======================================
+# =========================
+# CLI TEST
+# =========================
 
-    return (
-        "I'm AbrarAI, your local assistant. 🤖\n\n"
-        "I currently work without an online API.\n"
-        "You can teach me things using commands like:\n\n"
-        "• My name is Abrar\n"
-        "• My favorite color is blue\n"
-        "• My favorite food is biryani\n"
-        "• My favorite game is BGMI\n"
-        "• I study B.Tech\n"
-        "• I like coding\n"
-        "• Show my memory"
-    )
+if __name__ == "__main__":
 
+    print("================================")
+    print("       AbrarAI CLI")
+    print("================================")
+    print("Type 'switch' to change profile.")
+    print("Type 'exit' to quit.\n")
+
+    current_user = DEFAULT_USER
+
+    print(f"Current profile: {get_display_name(current_user)}")
+
+    while True:
+
+        user_input = input("\nYou: ").strip()
+
+        if not user_input:
+            continue
+
+        if user_input.lower() == "exit":
+            print("AbrarAI: Bye!")
+            break
+
+        if user_input.lower() == "switch":
+
+            users = load_users()
+
+            print("\nAvailable profiles:")
+
+            for user_id, data in users.items():
+                print(f"- {user_id} ({data.get('name', user_id)})")
+
+            selected = input("\nEnter profile ID: ").strip().lower()
+
+            if selected in users:
+                current_user = selected
+                print(
+                    f"AbrarAI: Switched to "
+                    f"{get_display_name(current_user)}."
+                )
+            else:
+                print("AbrarAI: Profile nahi mila.")
+
+            continue
+
+        answer = ask_ai(user_input, current_user)
+
+        print(f"AbrarAI: {answer}")

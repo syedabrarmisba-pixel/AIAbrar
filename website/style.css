@@ -1,0 +1,522 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #0f0f0f;
+    color: white;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* =========================
+   SIDEBAR
+========================= */
+
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 260px;
+    height: 100vh;
+    background: #171717;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #292929;
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 25px;
+}
+
+.new-chat-btn {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #444;
+    border-radius: 8px;
+    background: #242424;
+    color: white;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.new-chat-btn:hover {
+    background: #303030;
+}
+
+.sidebar-section {
+    margin-top: 30px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.sidebar-section p {
+    color: #999;
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+
+/* CHAT LIST */
+
+#chatHistory {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.chat-item {
+    padding: 11px 12px;
+    border-radius: 8px;
+    color: #ddd;
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-item:hover {
+    background: #252525;
+}
+
+.chat-item.active {
+    background: #2b2b2b;
+    color: white;
+}
+
+/* SIDEBAR BOTTOM */
+
+.sidebar-bottom {
+    margin-top: 15px;
+}
+
+.sidebar-bottom button {
+    width: 100%;
+    padding: 11px;
+    margin-top: 8px;
+    background: transparent;
+    border: none;
+    color: #ccc;
+    text-align: left;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.sidebar-bottom button:hover {
+    background: #252525;
+}
+
+/* =========================
+   MAIN
+========================= */
+
+.main {
+    margin-left: 260px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* =========================
+   TOP BAR
+========================= */
+
+.topbar {
+    height: 70px;
+    border-bottom: 1px solid #292929;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 25px;
+}
+
+.topbar h2 {
+    font-size: 20px;
+}
+
+.topbar span {
+    color: #888;
+    font-size: 12px;
+}
+
+.profile-btn {
+    background: #242424;
+    color: white;
+    border: 1px solid #444;
+    border-radius: 7px;
+    padding: 9px 16px;
+    cursor: pointer;
+}
+
+.profile-btn:hover {
+    background: #303030;
+}
+
+/* =========================
+   CHAT AREA
+========================= */
+
+.chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 30px 40px;
+}
+
+/* WELCOME */
+
+.welcome {
+    max-width: 700px;
+    margin: 80px auto;
+    text-align: center;
+}
+
+.welcome-icon {
+    font-size: 60px;
+    margin-bottom: 20px;
+}
+
+.welcome h1 {
+    font-size: 32px;
+    margin-bottom: 12px;
+}
+
+.welcome p {
+    color: #999;
+    margin-top: 6px;
+}
+
+/* =========================
+   MESSAGES
+========================= */
+
+.message {
+    max-width: 800px;
+    width: fit-content;
+    padding: 12px 16px;
+    margin-top: 12px;
+    border-radius: 14px;
+    line-height: 1.5;
+    font-size: 15px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* USER = RIGHT */
+
+.message.user {
+    margin-left: auto;
+    margin-right: 0;
+    background: #2f2f2f;
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+/* AI = LEFT */
+
+.message.ai {
+    margin-left: 0;
+    margin-right: auto;
+    background: #1c1c1c;
+    color: #eee;
+    border-bottom-left-radius: 4px;
+}
+
+/* =========================
+   INPUT
+========================= */
+
+.input-container {
+    padding: 15px 30px 20px;
+}
+
+.input-box {
+    max-width: 850px;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    background: #202020;
+    border: 1px solid #3a3a3a;
+    border-radius: 14px;
+    padding: 7px;
+}
+
+.input-box input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: white;
+    font-size: 15px;
+    padding: 12px;
+}
+
+.input-box input::placeholder {
+    color: #777;
+}
+
+.icon-btn,
+.send-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.icon-btn {
+    background: transparent;
+    color: #aaa;
+}
+
+.send-btn {
+    background: white;
+    color: black;
+}
+
+.send-btn:hover {
+    transform: scale(1.04);
+}
+
+.disclaimer {
+    text-align: center;
+    color: #666;
+    font-size: 11px;
+    margin-top: 8px;
+}
+
+/* =========================
+   LOGIN MODAL
+========================= */
+
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.login-card {
+    position: relative;
+    width: 390px;
+    background: #181818;
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 35px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.close-btn {
+    position: absolute;
+    top: 12px;
+    right: 15px;
+    border: none;
+    background: transparent;
+    color: #aaa;
+    font-size: 25px;
+    cursor: pointer;
+}
+
+.login-logo {
+    font-size: 45px;
+    margin-bottom: 10px;
+}
+
+.login-card h2 {
+    margin-bottom: 8px;
+}
+
+.login-card > p {
+    color: #888;
+    margin-bottom: 25px;
+}
+
+.google-login,
+.phone-login,
+.email-login {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.google-login {
+    background: white;
+    color: black;
+    border: none;
+}
+
+.phone-login {
+    background: #242424;
+    color: white;
+    border: 1px solid #444;
+}
+
+.google-login span {
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.divider {
+    margin: 18px 0;
+    color: #666;
+    font-size: 12px;
+}
+
+.login-card input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: #242424;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: white;
+    outline: none;
+}
+
+.email-login {
+    background: white;
+    color: black;
+    border: none;
+}
+
+.terms {
+    font-size: 10px;
+    color: #666;
+    line-height: 1.5;
+    margin-top: 15px;
+}
+
+/* =========================
+   LIGHT MODE
+========================= */
+
+body.light-mode {
+    background: #f5f5f5;
+    color: #111;
+}
+
+body.light-mode .sidebar {
+    background: #ffffff;
+    border-right: 1px solid #ddd;
+}
+
+body.light-mode .new-chat-btn {
+    background: #f1f1f1;
+    color: #111;
+    border-color: #ddd;
+}
+
+body.light-mode .chat-item {
+    color: #333;
+}
+
+body.light-mode .chat-item:hover,
+body.light-mode .chat-item.active {
+    background: #e9e9e9;
+}
+
+body.light-mode .sidebar-bottom button {
+    color: #333;
+}
+
+body.light-mode .sidebar-bottom button:hover {
+    background: #eee;
+}
+
+body.light-mode .topbar {
+    border-bottom-color: #ddd;
+}
+
+body.light-mode .topbar span {
+    color: #777;
+}
+
+body.light-mode .profile-btn {
+    background: #eee;
+    color: #111;
+    border-color: #ddd;
+}
+
+body.light-mode .message.user {
+    background: #e4e4e4;
+    color: #111;
+}
+
+body.light-mode .message.ai {
+    background: #eeeeee;
+    color: #111;
+}
+
+body.light-mode .input-box {
+    background: white;
+    border-color: #ccc;
+}
+
+body.light-mode .input-box input {
+    color: #111;
+}
+
+body.light-mode .send-btn {
+    background: #111;
+    color: white;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 700px) {
+
+    .sidebar {
+        width: 220px;
+        transform: translateX(-100%);
+        transition: 0.3s;
+    }
+
+    .main {
+        margin-left: 0;
+    }
+
+    .topbar {
+        padding: 0 15px;
+    }
+
+    .chat-area {
+        padding: 20px 15px;
+    }
+
+    .message {
+        max-width: 85%;
+    }
+
+    .welcome {
+        margin: 100px auto;
+    }
+
+    .welcome h1 {
+        font-size: 25px;
+    }
+
+    .input-container {
+        padding: 10px;
+    }
+
+    .login-card {
+        width: calc(100% - 30px);
+        padding: 25px;
+    }
+}

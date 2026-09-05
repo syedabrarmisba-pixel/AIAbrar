@@ -1,0 +1,895 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AbrarAI</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #222;
+            min-height: 100vh;
+        }
+
+        .screen {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* =========================
+           PROFILE SCREEN
+        ========================= */
+
+        #profileScreen {
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .profile-box {
+            background: white;
+            width: 100%;
+            max-width: 500px;
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 55px;
+            margin-bottom: 10px;
+        }
+
+        .profile-box h1 {
+            font-size: 30px;
+            margin-bottom: 8px;
+        }
+
+        .profile-box p {
+            color: #777;
+            margin-bottom: 25px;
+        }
+
+        #profiles {
+            display: grid;
+            gap: 12px;
+        }
+
+        .profile-btn {
+            width: 100%;
+            padding: 16px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 17px;
+            transition: 0.2s;
+        }
+
+        .profile-btn:hover {
+            background: #f0f3f7;
+            transform: translateY(-2px);
+        }
+
+        .add-profile-btn {
+            width: 100%;
+            padding: 15px;
+            margin-top: 18px;
+            border: none;
+            background: #111827;
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .add-profile-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* =========================
+           ADD PROFILE FORM
+        ========================= */
+
+        #addProfileForm {
+            display: none;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        #addProfileForm input {
+            width: 100%;
+            padding: 13px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 15px;
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .form-buttons button {
+            flex: 1;
+            padding: 13px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .create-btn {
+            background: #111827;
+            color: white;
+        }
+
+        .cancel-btn {
+            background: #e5e7eb;
+            color: #222;
+        }
+
+        #profileError {
+            color: #dc2626;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        /* =========================
+           CHAT SCREEN
+        ========================= */
+
+        #chatScreen {
+            flex-direction: column;
+        }
+
+        .topbar {
+            height: 65px;
+            background: #111827;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .brand {
+            font-size: 21px;
+            font-weight: bold;
+        }
+
+        .user-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-name {
+            font-size: 15px;
+        }
+
+        .change-btn {
+            border: 1px solid #555;
+            background: transparent;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .change-btn:hover {
+            background: #374151;
+        }
+
+        .chat-container {
+            flex: 1;
+            width: 100%;
+            max-width: 900px;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        #messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0 20px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .bubble {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: 15px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .message.user .bubble {
+            background: #111827;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.ai .bubble {
+            background: white;
+            border: 1px solid #ddd;
+            border-bottom-left-radius: 4px;
+        }
+
+        .welcome {
+            text-align: center;
+            margin-top: 100px;
+            color: #777;
+        }
+
+        .welcome h2 {
+            color: #222;
+            margin-bottom: 8px;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+            background: white;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 15px;
+        }
+
+        #messageInput {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        #sendBtn {
+            border: none;
+            background: #111827;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        #sendBtn:hover {
+            opacity: 0.9;
+        }
+
+        #sendBtn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media (max-width: 600px) {
+
+            .profile-box {
+                padding: 25px 18px;
+            }
+
+            .topbar {
+                padding: 0 12px;
+            }
+
+            .brand {
+                font-size: 18px;
+            }
+
+            .user-name {
+                display: none;
+            }
+
+            .chat-container {
+                padding: 12px;
+            }
+
+            .bubble {
+                max-width: 88%;
+            }
+
+            #sendBtn {
+                padding: 10px 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- =========================
+         PROFILE SCREEN
+    ========================= -->
+
+    <div id="profileScreen" class="screen active">
+
+        <div class="profile-box">
+
+            <div class="logo">🤖</div>
+
+            <h1>Welcome to AbrarAI</h1>
+
+            <p>Who's using AbrarAI?</p>
+
+            <div id="profiles">
+                Loading profiles...
+            </div>
+
+            <button class="add-profile-btn" onclick="showAddProfile()">
+                ➕ Add Profile
+            </button>
+
+            <!-- ADD PROFILE FORM -->
+
+            <div id="addProfileForm">
+
+                <input
+                    type="text"
+                    id="newName"
+                    placeholder="Enter name (e.g. Ammi)"
+                >
+
+                <input
+                    type="text"
+                    id="newUserId"
+                    placeholder="Profile ID (optional)"
+                >
+
+                <div class="form-buttons">
+
+                    <button
+                        class="create-btn"
+                        onclick="addProfile()">
+                        Create Profile
+                    </button>
+
+                    <button
+                        class="cancel-btn"
+                        onclick="hideAddProfile()">
+                        Cancel
+                    </button>
+
+                </div>
+
+                <div id="profileError"></div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================
+         CHAT SCREEN
+    ========================= -->
+
+    <div id="chatScreen" class="screen">
+
+        <div class="topbar">
+
+            <div class="brand">
+                🤖 AbrarAI
+            </div>
+
+            <div class="user-area">
+
+                <span class="user-name" id="currentUserName">
+                    User
+                </span>
+
+                <button
+                    class="change-btn"
+                    onclick="changeProfile()">
+                    Change Profile
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div class="chat-container">
+
+            <div id="messages">
+
+                <div class="welcome" id="welcomeMessage">
+
+                    <h2>👋 Hello!</h2>
+
+                    <p>
+                        I'm AbrarAI. How can I help you?
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="input-area">
+
+                <input
+                    type="text"
+                    id="messageInput"
+                    placeholder="Type your message..."
+                    autocomplete="off"
+                >
+
+                <button
+                    id="sendBtn"
+                    onclick="sendMessage()">
+                    Send
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        // =========================
+        // LOAD PROFILES
+        // =========================
+
+        async function loadProfiles() {
+
+            try {
+
+                const response =
+                    await fetch("/api/users");
+
+                const data =
+                    await response.json();
+
+                const profiles =
+                    document.getElementById("profiles");
+
+                profiles.innerHTML = "";
+
+                if (!data.users || data.users.length === 0) {
+
+                    profiles.innerHTML =
+                        "<p>No profiles found.</p>";
+
+                    return;
+                }
+
+                data.users.forEach(user => {
+
+                    const button =
+                        document.createElement("button");
+
+                    button.className = "profile-btn";
+
+                    button.innerHTML =
+                        "👤 " + user.name;
+
+                    button.onclick = function () {
+                        selectProfile(user.id);
+                    };
+
+                    profiles.appendChild(button);
+
+                });
+
+            } catch (error) {
+
+                document.getElementById("profiles").innerHTML =
+                    "<p>Could not load profiles.</p>";
+
+                console.error(error);
+
+            }
+
+        }
+
+
+        // =========================
+        // SELECT PROFILE
+        // =========================
+
+        async function selectProfile(userId) {
+
+            try {
+
+                const response =
+                    await fetch("/api/select-user", {
+
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            user_id: userId
+                        })
+
+                    });
+
+                const data =
+                    await response.json();
+
+                if (!data.success) {
+
+                    alert(data.error || "Profile select nahi hua.");
+
+                    return;
+                }
+
+                openChat(data.name);
+
+            } catch (error) {
+
+                alert("Server se connection nahi ho raha.");
+
+                console.error(error);
+
+            }
+
+        }
+
+
+        // =========================
+        // OPEN CHAT
+        // =========================
+
+        function openChat(name) {
+
+            document
+                .getElementById("profileScreen")
+                .classList.remove("active");
+
+            document
+                .getElementById("chatScreen")
+                .classList.add("active");
+
+            document
+                .getElementById("currentUserName")
+                .textContent = name;
+
+            document
+                .getElementById("messageInput")
+                .focus();
+
+        }
+
+
+        // =========================
+        // SHOW ADD PROFILE
+        // =========================
+
+        function showAddProfile() {
+
+            document
+                .getElementById("addProfileForm")
+                .style.display = "block";
+
+            document
+                .getElementById("newName")
+                .focus();
+
+        }
+
+
+        // =========================
+        // HIDE ADD PROFILE
+        // =========================
+
+        function hideAddProfile() {
+
+            document
+                .getElementById("addProfileForm")
+                .style.display = "none";
+
+            document
+                .getElementById("newName")
+                .value = "";
+
+            document
+                .getElementById("newUserId")
+                .value = "";
+
+            document
+                .getElementById("profileError")
+                .textContent = "";
+
+        }
+
+
+        // =========================
+        // ADD NEW PROFILE
+        // =========================
+
+        async function addProfile() {
+
+            const name =
+                document
+                    .getElementById("newName")
+                    .value
+                    .trim();
+
+            const userId =
+                document
+                    .getElementById("newUserId")
+                    .value
+                    .trim();
+
+            const errorBox =
+                document.getElementById("profileError");
+
+            errorBox.textContent = "";
+
+            if (!name) {
+
+                errorBox.textContent =
+                    "Please name enter karo.";
+
+                return;
+            }
+
+            try {
+
+                const response =
+                    await fetch("/api/add-user", {
+
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+
+                        body: JSON.stringify({
+
+                            name: name,
+
+                            user_id: userId
+
+                        })
+
+                    });
+
+                const data =
+                    await response.json();
+
+                if (!data.success) {
+
+                    errorBox.textContent =
+                        data.error || "Profile create nahi hua.";
+
+                    return;
+                }
+
+                // New profile automatically selected
+                openChat(data.name);
+
+            } catch (error) {
+
+                errorBox.textContent =
+                    "Server se connection nahi ho raha.";
+
+                console.error(error);
+
+            }
+
+        }
+
+
+        // =========================
+        // CHANGE PROFILE
+        // =========================
+
+        async function changeProfile() {
+
+            try {
+
+                await fetch("/api/logout", {
+                    method: "POST"
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+            }
+
+            document
+                .getElementById("chatScreen")
+                .classList.remove("active");
+
+            document
+                .getElementById("profileScreen")
+                .classList.add("active");
+
+            loadProfiles();
+
+        }
+
+
+        // =========================
+        // SEND MESSAGE
+        // =========================
+
+        async function sendMessage() {
+
+            const input =
+                document.getElementById("messageInput");
+
+            const sendBtn =
+                document.getElementById("sendBtn");
+
+            const message =
+                input.value.trim();
+
+            if (!message) {
+                return;
+            }
+
+            addMessage(message, "user");
+
+            input.value = "";
+
+            sendBtn.disabled = true;
+
+            try {
+
+                const response =
+                    await fetch("/api/chat", {
+
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            message: message
+                        })
+
+                    });
+
+                const data =
+                    await response.json();
+
+                if (data.success) {
+
+                    addMessage(
+                        data.reply,
+                        "ai"
+                    );
+
+                } else {
+
+                    addMessage(
+                        "Error: " + (data.error || "Unknown error"),
+                        "ai"
+                    );
+
+                }
+
+            } catch (error) {
+
+                addMessage(
+                    "Server se connection nahi ho raha.",
+                    "ai"
+                );
+
+                console.error(error);
+
+            }
+
+            sendBtn.disabled = false;
+
+            input.focus();
+
+        }
+
+
+        // =========================
+        // ADD MESSAGE
+        // =========================
+
+        function addMessage(text, type) {
+
+            const messages =
+                document.getElementById("messages");
+
+            const welcome =
+                document.getElementById("welcomeMessage");
+
+            if (welcome) {
+                welcome.remove();
+            }
+
+            const messageDiv =
+                document.createElement("div");
+
+            messageDiv.className =
+                "message " + type;
+
+            const bubble =
+                document.createElement("div");
+
+            bubble.className = "bubble";
+
+            bubble.textContent = text;
+
+            messageDiv.appendChild(bubble);
+
+            messages.appendChild(messageDiv);
+
+            messages.scrollTop =
+                messages.scrollHeight;
+
+        }
+
+
+        // =========================
+        // ENTER TO SEND
+        // =========================
+
+        document
+            .getElementById("messageInput")
+            .addEventListener("keydown", function(event) {
+
+                if (
+                    event.key === "Enter" &&
+                    !event.shiftKey
+                ) {
+
+                    event.preventDefault();
+
+                    sendMessage();
+
+                }
+
+            });
+
+
+        // =========================
+        // START
+        // =========================
+
+        loadProfiles();
+
+    </script>
+
+</body>
+
+</html>
+```
